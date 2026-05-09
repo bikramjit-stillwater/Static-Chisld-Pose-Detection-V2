@@ -1,0 +1,31 @@
+# Render deployment configuration
+# Place this file at the project root.
+# Render will auto-detect it when you connect your repo.
+
+services:
+  - type: web
+    name: tadasana-pose-app
+    runtime: python
+    plan: free  # change to 'starter' or 'standard' for production
+
+    # Build the project
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+
+    # Start the Streamlit app on the port Render provides
+    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true --server.enableCORS=false --server.enableXsrfProtection=false
+
+    # Pin the Python version
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.10"
+
+      # GEMINI_API_KEY must be set manually in the Render dashboard
+      # (Environment tab) - do NOT put the actual key here
+      - key: GEMINI_API_KEY
+        sync: false
+
+    # Health check endpoint (Streamlit serves on root)
+    healthCheckPath: /
+
+    # Auto-deploy on every push to main
+    autoDeploy: true

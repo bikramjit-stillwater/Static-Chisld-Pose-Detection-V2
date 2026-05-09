@@ -1,0 +1,8 @@
+streamlit
+opencv-python
+mediapipe==0.10.14
+numpy
+pandas
+Pillow
+python-dotenv
+google-genai
