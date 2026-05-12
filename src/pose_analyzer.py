@@ -5,10 +5,11 @@ Two entry points:
   - analyze_video(path)  : process video frame by frame, aggregate scores
   - analyze_image(path)  : process a single photo
 
-VISIBILITY RULE:
-  Each step has critical body parts. Before scoring, we check landmark
-  visibility >= 0.5 AND coordinates inside image. If not visible,
-  the step scores 0 with a clear "not visible" message.
+RULES:
+  1. Visibility-zero rule: if a body part needed for a step isn't visible,
+     that step scores 0 with a clear "not visible" message.
+  2. Floor-pose check: if the user is detected as STANDING UP (torso vertical),
+     refuse to score - return clear "this is not Child's Pose" message.
 """
 
 import cv2
@@ -17,11 +18,12 @@ import math
 from src.pose_detector import PoseDetector
 from src.scorer import calculate_angle, validate_pose
 
-# Below this best-frame score we flag the analysis as low-confidence
 MIN_QUALITY_SCORE = 50
-
-# Visibility threshold
 VISIBILITY_THRESHOLD = 0.5
+
+# Torso must be tilted at least this many degrees from vertical to count as
+# a floor pose. Less than this -> person is standing -> not Child's Pose.
+MIN_TORSO_TILT_FOR_FLOOR_POSE = 30.0
 
 POSE_LANDMARKS = {
     "nose": 0,
@@ -36,18 +38,17 @@ POSE_LANDMARKS = {
     "left_foot_index": 31, "right_foot_index": 32,
 }
 
-# Critical landmarks per step for Child's Pose
 STEP_CRITICAL_LANDMARKS = {
-    1: ["left_hip", "right_hip", "left_knee", "right_knee",                          # Hips on Heels
+    1: ["left_hip", "right_hip", "left_knee", "right_knee",
         "left_ankle", "right_ankle", "left_heel", "right_heel"],
-    2: ["left_shoulder", "right_shoulder", "left_hip", "right_hip",                  # Torso Folded
+    2: ["left_shoulder", "right_shoulder", "left_hip", "right_hip",
         "left_knee", "right_knee"],
-    3: ["left_shoulder", "right_shoulder", "left_elbow", "right_elbow",              # Arms Extended
+    3: ["left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
         "left_wrist", "right_wrist"],
-    4: ["left_hip", "right_hip", "left_shoulder", "right_shoulder",                  # Spine Lengthened
+    4: ["left_hip", "right_hip", "left_shoulder", "right_shoulder",
         "left_wrist", "right_wrist"],
-    5: ["nose", "left_wrist", "right_wrist"],                                        # Forehead Down
-    6: ["left_shoulder", "right_shoulder", "left_ear", "right_ear"],                 # Shoulders Relaxed
+    5: ["nose", "left_wrist", "right_wrist"],
+    6: ["left_shoulder", "right_shoulder", "left_ear", "right_ear"],
 }
 
 
@@ -64,11 +65,20 @@ def distance(p1, p2):
     return math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
 
+def angle_from_vertical(p_top, p_bottom):
+    """Angle of the line from p_bottom to p_top, measured from vertical.
+    0 = perfectly vertical. 90 = perfectly horizontal."""
+    dx = p_top[0] - p_bottom[0]
+    dy = p_top[1] - p_bottom[1]
+    if dy == 0:
+        return 90.0
+    return math.degrees(math.atan2(abs(dx), abs(dy)))
+
+
 # -----------------------------------------------------------------------------
 # Visibility check
 # -----------------------------------------------------------------------------
 def landmark_is_visible(lms, idx):
-    """Visibility score >= threshold AND coords inside image."""
     lm = lms[idx]
     if lm.visibility < VISIBILITY_THRESHOLD:
         return False
@@ -78,7 +88,6 @@ def landmark_is_visible(lms, idx):
 
 
 def get_step_visibility(lms):
-    """Return {step_num: bool} - True if all critical landmarks visible."""
     result = {}
     for step_num, names in STEP_CRITICAL_LANDMARKS.items():
         all_visible = True
@@ -92,10 +101,38 @@ def get_step_visibility(lms):
 
 
 # -----------------------------------------------------------------------------
+# NEW: Floor-pose check (rejects standing/upright poses)
+# -----------------------------------------------------------------------------
+def get_torso_tilt(lms, w, h):
+    """Return the torso's angle from vertical, in degrees.
+    0 = perfectly upright (standing). 90 = lying horizontal (folded forward).
+    Returns None if shoulders or hips are not visible."""
+    needed = ["left_shoulder", "right_shoulder", "left_hip", "right_hip"]
+    for name in needed:
+        if not landmark_is_visible(lms, POSE_LANDMARKS[name]):
+            return None
+    ls = extract_xy(lms, w, h, POSE_LANDMARKS["left_shoulder"])
+    rs = extract_xy(lms, w, h, POSE_LANDMARKS["right_shoulder"])
+    lh = extract_xy(lms, w, h, POSE_LANDMARKS["left_hip"])
+    rh = extract_xy(lms, w, h, POSE_LANDMARKS["right_hip"])
+    mid_shoulders = midpoint(ls, rs)
+    mid_hips = midpoint(lh, rh)
+    return angle_from_vertical(mid_shoulders, mid_hips)
+
+
+def is_floor_pose(lms, w, h):
+    """Returns True if the body looks like it's in a folded/floor pose.
+    Returns False if the body is standing upright (e.g. Tadasana)."""
+    tilt = get_torso_tilt(lms, w, h)
+    if tilt is None:
+        return True  # if we can't tell, don't reject - let visibility rule handle it
+    return tilt >= MIN_TORSO_TILT_FOR_FLOOR_POSE
+
+
+# -----------------------------------------------------------------------------
 # Feature extraction for Child's Pose
 # -----------------------------------------------------------------------------
 def build_features(lms, w, h):
-    """Compute geometric features needed by the Child's Pose scorer."""
     ls = extract_xy(lms, w, h, POSE_LANDMARKS["left_shoulder"])
     rs = extract_xy(lms, w, h, POSE_LANDMARKS["right_shoulder"])
     lh = extract_xy(lms, w, h, POSE_LANDMARKS["left_hip"])
@@ -121,33 +158,21 @@ def build_features(lms, w, h):
     mid_wrists = midpoint(lw_pt, rw_pt)
     mid_ears = midpoint(le, re)
 
-    # body_scale: use shoulder-to-hip distance as a normalization unit
-    # This is the most stable distance regardless of camera angle
     body_scale = distance(mid_shoulders, mid_hips)
     if body_scale < 1:
-        body_scale = max(w, h) * 0.1  # fallback
+        body_scale = max(w, h) * 0.1
 
-    # --- Step 1 features: Hips on Heels ---
-    # In Child's Pose, hips sit on heels. Measure distance from hips to heels.
-    # Normalize by thigh length (hip-to-knee) for consistency.
     thigh_length = distance(mid_hips, mid_knees)
     if thigh_length < 1:
         thigh_length = body_scale
     hip_to_heel_distance = distance(mid_hips, mid_heels)
     hip_to_heel_ratio = hip_to_heel_distance / thigh_length
 
-    # --- Step 2 features: Torso Folded Forward ---
-    # Angle at hip between torso (hip->shoulder) and thigh (hip->knee).
-    # Good Child's Pose: small angle (torso close to thighs).
     torso_thigh_angle = calculate_angle(mid_shoulders, mid_hips, mid_knees)
 
-    # --- Step 3 features: Arms Extended Forward ---
-    # Elbow angles
     left_elbow_angle = calculate_angle(ls, lel, lw_pt)
     right_elbow_angle = calculate_angle(rs, rel, rw_pt)
 
-    # Arm extension ratio: shoulder-to-wrist / shoulder-to-elbow
-    # ~2.0 means fully extended; lower means bent
     left_se = distance(ls, lel)
     right_se = distance(rs, rel)
     left_sw = distance(ls, lw_pt)
@@ -155,49 +180,28 @@ def build_features(lms, w, h):
     left_arm_extension_ratio = left_sw / left_se if left_se > 1 else 1.0
     right_arm_extension_ratio = right_sw / right_se if right_se > 1 else 1.0
 
-    # --- Step 4 features: Spine Lengthened ---
-    # Angle at shoulders between (hips->shoulders) and (shoulders->wrists).
-    # Straight line = 180; deviation = 180 - angle.
     spine_line_angle = calculate_angle(mid_hips, mid_shoulders, mid_wrists)
     spine_line_deviation = 180.0 - spine_line_angle
 
-    # --- Step 5 features: Forehead Down ---
-    # head_lift_above_mat: how high the nose is above wrist level
-    # Positive (in screen coords y goes DOWN, so smaller y = higher up):
-    #   value = (wrist_y - nose_y) / body_scale (NORMALIZED)
-    # If nose is above wrist (head lifted up), nose_y < wrist_y, so this is POSITIVE
-    # If nose is at/below wrist (head on mat), this is near 0 or negative
     head_lift_above_mat = (mid_wrists[1] - nose[1]) / body_scale
-
-    # --- Step 6 features: Shoulders Relaxed ---
-    # shoulder_ear_drop: how far shoulders are below ears
-    # Positive value = shoulders below ears (good - relaxed)
-    # Near zero / negative = shoulders hunched up to ears (bad)
     shoulder_ear_drop = (mid_shoulders[1] - mid_ears[1]) / body_scale
 
     return {
-        # Step 1
         "hip_to_heel_ratio": hip_to_heel_ratio,
-        # Step 2
         "torso_thigh_angle": torso_thigh_angle,
-        # Step 3
         "left_elbow_angle": left_elbow_angle,
         "right_elbow_angle": right_elbow_angle,
         "left_arm_extension_ratio": left_arm_extension_ratio,
         "right_arm_extension_ratio": right_arm_extension_ratio,
-        # Step 4
         "spine_line_deviation": spine_line_deviation,
-        # Step 5
         "head_lift_above_mat": head_lift_above_mat,
-        # Step 6
         "shoulder_ear_drop": shoulder_ear_drop,
-        # Extra useful info
         "body_scale": body_scale,
     }
 
 
 # -----------------------------------------------------------------------------
-# Image generation - annotated + step crops
+# Image generation (unchanged from previous version)
 # -----------------------------------------------------------------------------
 def _crop_safe(img, x1, y1, x2, y2):
     h, w = img.shape[:2]
@@ -254,42 +258,35 @@ def generate_step_images(frame, lms, step_results, save_dir):
     def dot(p, color, r=6):
         cv2.circle(annotated, (int(p[0]), int(p[1])), r, color, -1, cv2.LINE_AA)
 
-    # Step 1 (Hips on Heels) - hip-to-heel line
     c1 = color_for(1)
     mid_hp = midpoint(pts["left_hip"], pts["right_hip"])
     mid_he = midpoint(pts["left_heel"], pts["right_heel"])
     line(mid_hp, mid_he, c1, thick=3)
 
-    # Step 2 (Torso Folded) - shoulder-to-hip and hip-to-knee lines
     c2 = color_for(2)
     mid_sh = midpoint(pts["left_shoulder"], pts["right_shoulder"])
     mid_kn = midpoint(pts["left_knee"], pts["right_knee"])
     line(mid_sh, mid_hp, c2, thick=5)
     line(mid_hp, mid_kn, c2, thick=5)
 
-    # Step 3 (Arms Extended) - shoulder-elbow-wrist
     c3 = color_for(3)
     line(pts["left_shoulder"], pts["left_elbow"], c3)
     line(pts["left_elbow"], pts["left_wrist"], c3)
     line(pts["right_shoulder"], pts["right_elbow"], c3)
     line(pts["right_elbow"], pts["right_wrist"], c3)
 
-    # Step 4 (Spine Lengthened) - hip -> shoulder -> wrist line
     c4 = color_for(4)
     mid_wr = midpoint(pts["left_wrist"], pts["right_wrist"])
     line(mid_hp, mid_sh, c4, thick=4)
     line(mid_sh, mid_wr, c4, thick=4)
 
-    # Step 5 (Forehead Down) - dot on nose
     c5 = color_for(5)
     dot(pts["nose"], c5, r=10)
 
-    # Step 6 (Shoulders Relaxed) - ear-to-shoulder lines
     c6 = color_for(6)
     line(pts["left_ear"], pts["left_shoulder"], c6, thick=3)
     line(pts["right_ear"], pts["right_shoulder"], c6, thick=3)
 
-    # All joint dots
     for name in ["left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
                  "left_wrist", "right_wrist", "left_hip", "right_hip",
                  "left_knee", "right_knee", "left_ankle", "right_ankle",
@@ -300,8 +297,6 @@ def generate_step_images(frame, lms, step_results, save_dir):
     cv2.imwrite(annotated_path, annotated)
     paths["annotated"] = annotated_path
 
-    # Step crops
-    # Step 1: hips and heels
     hh_pts = [pts["left_hip"], pts["right_hip"],
               pts["left_knee"], pts["right_knee"],
               pts["left_heel"], pts["right_heel"]]
@@ -309,7 +304,6 @@ def generate_step_images(frame, lms, step_results, save_dir):
     p1 = os.path.join(save_dir, "step1_hips_on_heels.jpg")
     cv2.imwrite(p1, crop); paths["step_1"] = p1
 
-    # Step 2: torso fold - shoulders, hips, knees
     tf_pts = [pts["left_shoulder"], pts["right_shoulder"],
               pts["left_hip"], pts["right_hip"],
               pts["left_knee"], pts["right_knee"]]
@@ -317,7 +311,6 @@ def generate_step_images(frame, lms, step_results, save_dir):
     p2 = os.path.join(save_dir, "step2_torso_fold.jpg")
     cv2.imwrite(p2, crop); paths["step_2"] = p2
 
-    # Step 3: arms - shoulders to wrists
     arm_pts = [pts["left_shoulder"], pts["right_shoulder"],
                pts["left_elbow"], pts["right_elbow"],
                pts["left_wrist"], pts["right_wrist"]]
@@ -325,7 +318,6 @@ def generate_step_images(frame, lms, step_results, save_dir):
     p3 = os.path.join(save_dir, "step3_arms_extended.jpg")
     cv2.imwrite(p3, crop); paths["step_3"] = p3
 
-    # Step 4: full spine line - hip to wrist
     sp_pts = [pts["left_hip"], pts["right_hip"],
               pts["left_shoulder"], pts["right_shoulder"],
               pts["left_wrist"], pts["right_wrist"]]
@@ -333,13 +325,11 @@ def generate_step_images(frame, lms, step_results, save_dir):
     p4 = os.path.join(save_dir, "step4_spine_lengthened.jpg")
     cv2.imwrite(p4, crop); paths["step_4"] = p4
 
-    # Step 5: forehead/head and wrists
     head_pts = [pts["nose"], pts["left_wrist"], pts["right_wrist"]]
     crop = _crop_with_padding(annotated, head_pts, 0.15, 0.20)
     p5 = os.path.join(save_dir, "step5_forehead_down.jpg")
     cv2.imwrite(p5, crop); paths["step_5"] = p5
 
-    # Step 6: shoulders and ears
     sh_pts = [pts["left_shoulder"], pts["right_shoulder"],
               pts["left_ear"], pts["right_ear"]]
     crop = _crop_with_padding(annotated, sh_pts, 0.15, 0.20)
@@ -350,7 +340,31 @@ def generate_step_images(frame, lms, step_results, save_dir):
 
 
 # -----------------------------------------------------------------------------
-# Aggregation across frames (for video)
+# NEW: Build a "not Child's Pose" result for standing/wrong-pose inputs
+# -----------------------------------------------------------------------------
+def _not_childs_pose_result(best_frame_path=None, source_image_path=None,
+                            annotated_path=None, mode="video"):
+    """Return a result dict indicating the input is NOT Child's Pose."""
+    return {
+        "final_score": 0,
+        "issues": ["This does not look like Extended Child's Pose - "
+                   "you appear to be standing or in a different pose"],
+        "steps": [],
+        "best_frame_path": best_frame_path or source_image_path,
+        "annotated_path": annotated_path,
+        "step_image_paths": {},
+        "low_quality_warning": True,
+        "low_quality_message": (
+            "We did not detect Extended Child's Pose. "
+            "Please get into the pose (kneeling, forehead toward the mat, "
+            "arms extended forward) and re-record from the SIDE of your body."
+        ),
+        "pose_invalid": True,
+    }
+
+
+# -----------------------------------------------------------------------------
+# Aggregation across frames
 # -----------------------------------------------------------------------------
 def aggregate_step_reports(all_reports):
     if not all_reports:
@@ -409,7 +423,6 @@ def aggregate_step_reports(all_reports):
 
 
 def _single_frame_to_aggregated(report):
-    """Convert single-frame validation result into aggregated shape (for photos)."""
     aggregated_steps = []
     for s in report["steps"]:
         not_vis = s.get("not_visible", False)
@@ -445,6 +458,9 @@ def analyze_video(video_path, save_frames_dir=None):
     best_landmarks = None
     best_step_results = None
 
+    floor_pose_frames = 0
+    standing_pose_frames = 0
+
     if save_frames_dir:
         os.makedirs(save_frames_dir, exist_ok=True)
 
@@ -457,6 +473,14 @@ def analyze_video(video_path, save_frames_dir=None):
 
         if results.pose_landmarks:
             lms = results.pose_landmarks.landmark
+
+            # Floor-pose check
+            if is_floor_pose(lms, w, h):
+                floor_pose_frames += 1
+            else:
+                standing_pose_frames += 1
+                continue  # skip this frame for scoring - person is standing
+
             step_visibility = get_step_visibility(lms)
             features = build_features(lms, w, h)
             report = validate_pose(features, step_visibility)
@@ -470,6 +494,12 @@ def analyze_video(video_path, save_frames_dir=None):
 
     cap.release()
 
+    total_pose_frames = floor_pose_frames + standing_pose_frames
+
+    # If MOST frames showed standing pose, reject as not Child's Pose
+    if total_pose_frames > 0 and standing_pose_frames > floor_pose_frames:
+        return _not_childs_pose_result(mode="video")
+
     if not all_reports:
         return {
             "final_score": 0,
@@ -479,7 +509,10 @@ def analyze_video(video_path, save_frames_dir=None):
             "annotated_path": None,
             "step_image_paths": {},
             "low_quality_warning": True,
-            "low_quality_message": "No body pose detected. Please record again with the full body in frame.",
+            "low_quality_message": (
+                "No body pose detected. Please record from the SIDE "
+                "with your full body in frame."
+            ),
         }
 
     aggregated = aggregate_step_reports(all_reports)
@@ -499,10 +532,9 @@ def analyze_video(video_path, save_frames_dir=None):
     low_quality_msg = None
     if low_quality:
         low_quality_msg = (
-            f"The best frame in this video only scored {best_score}/100. "
-            "Some body parts may not have been visible, or the pose may not have been "
-            "clearly Extended Child's Pose. For more accurate results, please re-record "
-            "with: side view of your body, good lighting, and hold the pose steadily."
+            f"The best frame scored only {best_score}/100. "
+            "For accurate results: record from the SIDE of your body, "
+            "with good lighting and the pose held steadily."
         )
 
     return {
@@ -518,7 +550,7 @@ def analyze_video(video_path, save_frames_dir=None):
 
 
 # -----------------------------------------------------------------------------
-# Photo analysis - same logic as one frame of video
+# Photo analysis
 # -----------------------------------------------------------------------------
 def analyze_image(image_path, save_frames_dir=None):
     detector = PoseDetector()
@@ -553,11 +585,16 @@ def analyze_image(image_path, save_frames_dir=None):
             "low_quality_warning": True,
             "low_quality_message": (
                 "No body pose was detected. Please retake with: good lighting, "
-                "side view of your body, and clear contrast against the background."
+                "SIDE view of your body, and clear contrast against the background."
             ),
         }
 
     lms = results.pose_landmarks.landmark
+
+    # Floor-pose check FIRST
+    if not is_floor_pose(lms, w, h):
+        return _not_childs_pose_result(source_image_path=image_path, mode="photo")
+
     step_visibility = get_step_visibility(lms)
     features = build_features(lms, w, h)
     report = validate_pose(features, step_visibility)
@@ -580,9 +617,8 @@ def analyze_image(image_path, save_frames_dir=None):
     if low_quality:
         low_quality_msg = (
             f"This photo scored only {aggregated['final_score']}/100. "
-            "Some body parts may not have been visible, or the pose may not have been "
-            "clearly Extended Child's Pose. Try retaking with: side view of your body, "
-            "good lighting, and the pose held clearly."
+            "For accurate results: take the photo from the SIDE of your body, "
+            "with good lighting and the pose held clearly."
         )
 
     return {
