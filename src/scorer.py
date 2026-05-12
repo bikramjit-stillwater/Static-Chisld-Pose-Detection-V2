@@ -1,5 +1,5 @@
 """
-Utthita Balasana (Extended Child's Pose) validator.
+Child's Pose validator.
 
 Source: https://rishikeshyogavalley.com/utthita-balasana-extended-childs-pose/
 
@@ -318,7 +318,7 @@ STEP_WEIGHTS = {
 
 
 def validate_pose(features, step_visibility=None):
-    """Run 6-step validation for Extended Child's Pose with compound penalties.
+    """Run 6-step validation for Child's Pose with compound penalties.
 
     Args:
         features: dict from build_features()
