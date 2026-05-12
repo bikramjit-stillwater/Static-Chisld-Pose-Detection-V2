@@ -1,5 +1,5 @@
 """
-Feedback generation for Extended Child's Pose.
+Feedback generation for Child's Pose.
 
 Uses Google Gemini if GEMINI_API_KEY is set, otherwise falls back to a
 deterministic rule-based message.
@@ -39,7 +39,7 @@ def get_rule_based_feedback(score, issues, steps=None):
         )
     elif score >= 85:
         lines.append(
-            "Excellent! Your Extended Child's Pose shows great relaxation and alignment."
+            "Excellent! Your Child's Pose shows great relaxation and alignment."
         )
     elif score >= 70:
         lines.append(
@@ -57,7 +57,7 @@ def get_rule_based_feedback(score, issues, steps=None):
         )
     else:
         lines.append(
-            "This does not look like Extended Child's Pose yet. Begin from a "
+            "This does not look like Child's Pose yet. Begin from a "
             "tabletop position and slowly lower your hips back toward your heels."
         )
 
@@ -94,7 +94,7 @@ def get_gemini_feedback(score, issues, steps=None):
         prompt = f"""
 You are an honest, kind, knowledgeable yoga teacher.
 
-A student performed Utthita Balasana (Extended Child's Pose).
+A student performed Child's Pose.
 Be HONEST - if the score is low, do not pretend the pose was good.
 If a body part was NOT VISIBLE in the frame, do NOT make up feedback about it.
 Simply note that you could not see that part and ask them to re-record.
@@ -105,7 +105,7 @@ SCORING GUIDE:
   90-100  Excellent - small refinements only
   75-89   Good - a couple of clear corrections
   55-74   Mixed - several real issues
-  30-54   Poor - the pose is not Extended Child's Pose yet
+  30-54   Poor - the pose is not Child's Pose yet
    0-29   Very poor - explicitly say it does not look like the pose
 
 STEP-BY-STEP REPORT:
@@ -114,7 +114,7 @@ STEP-BY-STEP REPORT:
 KEY ISSUES OBSERVED:
 {issues_text}
 
-The 6 steps of Extended Child's Pose are:
+The 6 steps of Child's Pose are:
   1. Hips on Heels - hips sink back to rest on heels
   2. Torso Folded Forward - chest folds down toward thighs
   3. Arms Extended Forward - arms reach out in front, elbows straight
