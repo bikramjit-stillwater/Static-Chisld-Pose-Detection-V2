@@ -1,5 +1,5 @@
 """
-Pose analyzer for Utthita Balasana (Extended Child's Pose).
+Pose analyzer for Child's Pose.
 
 Two entry points:
   - analyze_video(path)  : process video frame by frame, aggregate scores
@@ -450,7 +450,7 @@ def _not_childs_pose_result(best_frame_path=None, source_image_path=None,
                             annotated_path=None, mode="video"):
     return {
         "final_score": 0,
-        "issues": ["This does not look like Extended Child's Pose - "
+        "issues": ["This does not look like Child's Pose - "
                    "you appear to be standing or in a different pose"],
         "steps": [],
         "best_frame_path": best_frame_path or source_image_path,
@@ -458,7 +458,7 @@ def _not_childs_pose_result(best_frame_path=None, source_image_path=None,
         "step_image_paths": {},
         "low_quality_warning": True,
         "low_quality_message": (
-            "We did not detect Extended Child's Pose. "
+            "We did not detect Child's Pose. "
             "Please get into the pose (kneeling, forehead toward the mat, "
             "arms extended forward) and re-record from the SIDE of your body."
         ),
