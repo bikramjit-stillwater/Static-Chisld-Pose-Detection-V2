@@ -27,35 +27,93 @@ footer {visibility: hidden;}
 header[data-testid="stHeader"] {height: 0; visibility: hidden;}
 .stDeployButton {display: none;}
 
-.page-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #e8edf3; }
+/* =====================================================================
+   PAGE-LEVEL TEXT - all white/light because page background is dark
+   ===================================================================== */
+.page-header {
+    margin-bottom: 1.5rem; padding-bottom: 1rem;
+    border-bottom: 2px solid #334155;
+}
 .page-header h1 {
     font-size: 1.75rem !important; font-weight: 700 !important;
-    color: #0f172a !important; margin: 0 !important;
+    color: #FFFFFF !important; margin: 0 !important;
     line-height: 1.2; letter-spacing: -0.02em;
 }
-.page-header .subtitle { font-size: 0.875rem; color: #64748b; margin-top: 0.35rem; }
+.page-header .subtitle {
+    font-size: 0.875rem;
+    color: #cbd5e1;
+    margin-top: 0.35rem;
+}
 
-.stMarkdown h2 {
+/* Section headings - white on dark page */
+.stMarkdown h2, h2 {
     font-size: 1.15rem !important; font-weight: 600 !important;
-    color: #0f172a !important;
+    color: #FFFFFF !important;
     margin-top: 1.5rem !important; margin-bottom: 0.75rem !important;
 }
-.stMarkdown h3 {
+.stMarkdown h3, h3 {
     font-size: 0.95rem !important; font-weight: 600 !important;
-    color: #334155 !important;
+    color: #e2e8f0 !important;
     margin-top: 0.5rem !important; margin-bottom: 0.4rem !important;
 }
 .stMarkdown p, .stMarkdown li {
-    font-size: 0.875rem !important; line-height: 1.5 !important; color: #334155;
+    font-size: 0.875rem !important; line-height: 1.5 !important;
+    color: #e2e8f0 !important;
+}
+.stMarkdown strong { color: #FFFFFF !important; }
+
+/* Captions - light on dark */
+[data-testid="stCaptionContainer"] {
+    font-size: 0.78rem !important;
+    color: #94a3b8 !important;
+    margin-bottom: 0.4rem;
 }
 
+/* =====================================================================
+   SIDE-VIEW INSTRUCTION BANNER (NEW - prominent at top)
+   ===================================================================== */
+.side-view-banner {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    color: white;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+    border: 1px solid #3b82f6;
+}
+.side-view-banner .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #bfdbfe;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+.side-view-banner .title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.3rem;
+}
+.side-view-banner .body-text {
+    font-size: 0.85rem;
+    color: #dbeafe;
+    line-height: 1.5;
+}
+.side-view-banner ul { margin: 0.4rem 0 0 1.2rem; padding: 0; }
+.side-view-banner li { margin: 0.15rem 0; color: #dbeafe; }
+
+/* =====================================================================
+   SCORE HERO - already light text on dark gradient, fine
+   ===================================================================== */
 .score-hero {
     background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
     border-radius: 14px; padding: 1.5rem;
     color: white;
-    box-shadow: 0 4px 20px rgba(15,23,42,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     height: 100%; display: flex; flex-direction: column;
     justify-content: space-between; min-height: 380px;
+    border: 1px solid #1e293b;
 }
 .score-label {
     font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
@@ -105,9 +163,14 @@ header[data-testid="stHeader"] {height: 0; visibility: hidden;}
     font-size: 0.82rem; color: #d1fae5;
 }
 
+/* =====================================================================
+   IMAGE CARDS - dark theme version (was white before)
+   ===================================================================== */
 .image-card {
-    background: white; border-radius: 14px; padding: 1rem;
-    border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: #1e293b;
+    border-radius: 14px; padding: 1rem;
+    border: 1px solid #334155;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
     height: 100%; min-height: 380px;
     display: flex; flex-direction: column;
 }
@@ -115,8 +178,14 @@ header[data-testid="stHeader"] {height: 0; visibility: hidden;}
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 0.6rem;
 }
-.image-card-title { font-size: 0.95rem; font-weight: 600; color: #0f172a; }
-.image-card-legend { font-size: 0.7rem; color: #64748b; }
+.image-card-title {
+    font-size: 0.95rem; font-weight: 600;
+    color: #FFFFFF;
+}
+.image-card-legend {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
 .legend-dot {
     display: inline-block; width: 8px; height: 8px;
     border-radius: 50%; margin-right: 0.3rem; vertical-align: middle;
@@ -133,36 +202,44 @@ header[data-testid="stHeader"] {height: 0; visibility: hidden;}
     margin: 0 auto; display: block;
 }
 
+/* =====================================================================
+   STEP CARDS - dark theme (white text on dark card background)
+   ===================================================================== */
 .step-card {
-    background: white; border: 1px solid #e2e8f0;
+    background: #1e293b;
+    border: 1px solid #334155;
     border-radius: 12px; padding: 0.85rem; margin-bottom: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     transition: all 0.15s ease;
     height: 100%; display: flex; flex-direction: column;
 }
 .step-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     transform: translateY(-1px);
 }
 .step-card.passed { border-left: 3px solid #10b981; }
 .step-card.failed { border-left: 3px solid #ef4444; }
 .step-card.notvisible {
     border-left: 3px solid #9ca3af;
-    background: #fafafa;
+    background: #0f172a;
 }
 
 .step-header {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 0.5rem;
 }
-.step-name { font-size: 0.9rem; font-weight: 600; color: #0f172a; line-height: 1.2; }
-.step-card.notvisible .step-name { color: #6b7280; }
+.step-name {
+    font-size: 0.9rem; font-weight: 600;
+    color: #FFFFFF;
+    line-height: 1.2;
+}
+.step-card.notvisible .step-name { color: #94a3b8; }
 .step-status-icon { font-size: 1.1rem; }
 
 .step-score-row {
     display: flex; justify-content: space-between; align-items: baseline;
     margin-bottom: 0.6rem; padding-bottom: 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #334155;
 }
 .step-score-big { font-size: 1.4rem; font-weight: 700; line-height: 1; }
 .step-score-big.pass { color: #10b981; }
@@ -174,7 +251,8 @@ header[data-testid="stHeader"] {height: 0; visibility: hidden;}
 .step-image-wrap {
     width: 100%; height: 180px;
     display: flex; align-items: center; justify-content: center;
-    background: #f8fafc; border-radius: 6px; overflow: hidden;
+    background: #0f172a;
+    border-radius: 6px; overflow: hidden;
     margin-bottom: 0.5rem;
 }
 .step-image-wrap [data-testid="stImage"] {
@@ -188,49 +266,59 @@ header[data-testid="stHeader"] {height: 0; visibility: hidden;}
 }
 
 .step-issue {
-    background: #fef2f2; border-left: 2px solid #ef4444;
+    background: rgba(239,68,68,0.15);
+    border-left: 2px solid #ef4444;
     padding: 0.45rem 0.6rem; border-radius: 4px;
-    font-size: 0.75rem; color: #991b1b; line-height: 1.4;
+    font-size: 0.75rem; color: #fecaca; line-height: 1.4;
     margin-bottom: 0.35rem;
 }
+.step-issue strong { color: #FFFFFF; }
 .step-passed-msg {
-    background: #f0fdf4; border-left: 2px solid #10b981;
+    background: rgba(16,185,129,0.15);
+    border-left: 2px solid #10b981;
     padding: 0.45rem 0.6rem; border-radius: 4px;
-    font-size: 0.75rem; color: #166534; margin-bottom: 0.35rem;
+    font-size: 0.75rem; color: #d1fae5; margin-bottom: 0.35rem;
 }
+.step-passed-msg strong { color: #FFFFFF; }
 .step-notvisible-msg {
-    background: #f3f4f6; border-left: 2px solid #9ca3af;
+    background: rgba(156,163,175,0.15);
+    border-left: 2px solid #9ca3af;
     padding: 0.45rem 0.6rem; border-radius: 4px;
-    font-size: 0.75rem; color: #4b5563; line-height: 1.4;
+    font-size: 0.75rem; color: #d1d5db; line-height: 1.4;
     margin-bottom: 0.35rem;
 }
+.step-notvisible-msg strong { color: #FFFFFF; }
 .step-cue {
-    background: #f8fafc; border-left: 2px solid #3b82f6;
+    background: rgba(59,130,246,0.12);
+    border-left: 2px solid #3b82f6;
     padding: 0.45rem 0.6rem; border-radius: 4px;
-    font-size: 0.72rem; color: #475569; line-height: 1.4;
+    font-size: 0.72rem; color: #bfdbfe; line-height: 1.4;
     font-style: italic;
 }
-.step-cue strong { font-style: normal; color: #1e3a5f; }
+.step-cue strong { font-style: normal; color: #FFFFFF; }
 
+/* =====================================================================
+   UPLOAD CONTROLS
+   ===================================================================== */
 [data-testid="stFileUploader"] section {
     padding: 1rem !important;
-    border: 1.5px dashed #cbd5e1; border-radius: 8px;
-    background-color: #f8fafc; transition: border-color 0.15s;
+    border: 1.5px dashed #475569; border-radius: 8px;
+    background-color: #1e293b; transition: border-color 0.15s;
 }
 [data-testid="stFileUploader"] section:hover {
-    border-color: #3b82f6; background-color: #f1f5f9;
+    border-color: #3b82f6; background-color: #334155;
 }
 
 .stButton > button {
-    background-color: #1e3a5f; color: white; font-weight: 600;
+    background-color: #2563eb; color: white; font-weight: 600;
     padding: 0.55rem 1.5rem; border-radius: 8px; border: none;
     font-size: 0.875rem; transition: all 0.15s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .stButton > button:hover {
-    background-color: #0f172a; color: white;
+    background-color: #1d4ed8; color: white;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+    box-shadow: 0 4px 12px rgba(37,99,235,0.35);
 }
 .stButton > button[kind="primary"] { background-color: #2563eb; }
 .stButton > button[kind="primary"]:hover { background-color: #1d4ed8; }
@@ -254,22 +342,19 @@ header[data-testid="stHeader"] {height: 0; visibility: hidden;}
     margin-bottom: 0.5rem !important;
     line-height: 1.4 !important;
 }
-[data-testid="stCaptionContainer"] {
-    font-size: 0.78rem !important; color: #64748b !important;
-    margin-bottom: 0.4rem;
-}
 
 .stTextArea textarea {
     font-size: 0.85rem !important; line-height: 1.6 !important;
-    background-color: #fafbfc !important;
+    background-color: #1e293b !important;
     border-radius: 8px !important;
-    border: 1px solid #e2e8f0 !important;
-    padding: 0.85rem !important; color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    padding: 0.85rem !important;
+    color: #e2e8f0 !important;
 }
 
 hr {
     margin: 1.25rem 0 !important; border: none !important;
-    border-top: 1px solid #e2e8f0 !important;
+    border-top: 1px solid #334155 !important;
 }
 
 @media (max-width: 768px) {
@@ -326,6 +411,22 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# SIDE-VIEW BANNER - prominent at top, always visible
+st.markdown("""
+<div class='side-view-banner'>
+  <div class='label'>📐 Important - record from the SIDE</div>
+  <div class='title'>This pose is on the floor - capture from the side of your body</div>
+  <div class='body-text'>
+    For the analysis to work, your full body must be visible from a side angle:
+    <ul>
+      <li>Place your camera at floor / mat level, beside your body</li>
+      <li>The whole body should fit in the frame - knees, hips, torso, arms, head</li>
+      <li>Do NOT shoot from above (top-down) or from the front</li>
+    </ul>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 recordings_dir = get_output_dir("recordings")
 frames_dir = get_output_dir("extracted_frames")
 
@@ -350,11 +451,11 @@ if not st.session_state.analysis_result:
             "video", type=["mp4", "mov", "avi", "mkv"],
             label_visibility="collapsed",
         )
-        st.caption("Tip: side view works best - knees, hips, torso, arms and head all visible.")
+        st.caption("Side view of your body, knees on the mat, arms reaching forward.")
     with in2:
         st.markdown("**Option 2 — Take a photo**")
         camera_file = st.camera_input("camera", label_visibility="collapsed")
-        st.caption("Position the camera at body height, capturing a side view.")
+        st.caption("Position camera at floor level, beside your body.")
 else:
     uploaded_video = None
     camera_file = None
@@ -431,174 +532,190 @@ if st.session_state.analysis_result:
     band_label, band_class = score_band(score)
     mode = st.session_state.input_mode or "video"
 
-    if result.get("low_quality_warning"):
-        st.warning(result.get("low_quality_message")
-                   or "Low confidence in this analysis - please re-record.")
+    # Show "not Child's Pose" prominently if pose was rejected
+    if result.get("pose_invalid"):
+        st.error(
+            "❌ **This does not look like Extended Child's Pose.** "
+            "You appear to be standing or in a different pose. "
+            "Please get into the pose (kneeling, forehead toward the mat, "
+            "arms extended forward) and re-record from the SIDE of your body."
+        )
+        st.markdown("## Coach's Feedback")
+        st.text_area(
+            "Feedback",
+            value=st.session_state.gemini_feedback or "No feedback generated.",
+            height=200,
+            label_visibility="collapsed",
+        )
+    else:
+        if result.get("low_quality_warning"):
+            st.warning(result.get("low_quality_message")
+                       or "Low confidence in this analysis - please re-record.")
 
-    # Hero row
-    hero_left, hero_right = st.columns([1, 1.5])
+        # Hero row
+        hero_left, hero_right = st.columns([1, 1.5])
 
-    with hero_left:
-        issues_html = ""
-        if result["issues"]:
-            for issue in result["issues"][:3]:
-                issues_html += f"<div class='issue-item'>{issue}</div>"
-        else:
-            issues_html = "<div class='no-issues'>✓ No major issues detected</div>"
+        with hero_left:
+            issues_html = ""
+            if result["issues"]:
+                for issue in result["issues"][:3]:
+                    issues_html += f"<div class='issue-item'>{issue}</div>"
+            else:
+                issues_html = "<div class='no-issues'>✓ No major issues detected</div>"
 
-        mode_tag = "📹 Video" if mode == "video" else "📸 Photo"
+            mode_tag = "📹 Video" if mode == "video" else "📸 Photo"
 
-        st.markdown(f"""
-        <div class='score-hero'>
-          <div>
-            <div class='score-label'>Final Score</div>
-            <div>
-              <span class='score-value'>{score}</span>
-              <span class='score-suffix'>/100</span>
+            st.markdown(f"""
+            <div class='score-hero'>
+              <div>
+                <div class='score-label'>Final Score</div>
+                <div>
+                  <span class='score-value'>{score}</span>
+                  <span class='score-suffix'>/100</span>
+                </div>
+                <span class='score-band {band_class}'>{band_label}</span>
+                <div><span class='input-mode-tag'>{mode_tag}</span></div>
+              </div>
+              <div class='issues-block'>
+                <h4>Top Issues</h4>
+                {issues_html}
+              </div>
             </div>
-            <span class='score-band {band_class}'>{band_label}</span>
-            <div><span class='input-mode-tag'>{mode_tag}</span></div>
-          </div>
-          <div class='issues-block'>
-            <h4>Top Issues</h4>
-            {issues_html}
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-    with hero_right:
-        annotated_path = result.get("annotated_path")
-        title = "Annotated Photo" if mode == "photo" else "Annotated Best Frame"
-        st.markdown(f"""
-        <div class='image-card'>
-          <div class='image-card-header'>
-            <div class='image-card-title'>{title}</div>
-            <div class='image-card-legend'>
-              <span class='legend-dot' style='background:#22c55e'></span>passed
-              &nbsp;
-              <span class='legend-dot' style='background:#ef4444'></span>needs work
-              &nbsp;
-              <span class='legend-dot' style='background:#9ca3af'></span>not visible
-            </div>
-          </div>
-          <div class='annotated-wrap'>
-        """, unsafe_allow_html=True)
+        with hero_right:
+            annotated_path = result.get("annotated_path")
+            title = "Annotated Photo" if mode == "photo" else "Annotated Best Frame"
+            st.markdown(f"""
+            <div class='image-card'>
+              <div class='image-card-header'>
+                <div class='image-card-title'>{title}</div>
+                <div class='image-card-legend'>
+                  <span class='legend-dot' style='background:#22c55e'></span>passed
+                  &nbsp;
+                  <span class='legend-dot' style='background:#ef4444'></span>needs work
+                  &nbsp;
+                  <span class='legend-dot' style='background:#9ca3af'></span>not visible
+                </div>
+              </div>
+              <div class='annotated-wrap'>
+            """, unsafe_allow_html=True)
 
-        if annotated_path and os.path.exists(annotated_path):
-            st.image(annotated_path)
-        elif result.get("best_frame_path") and os.path.exists(result["best_frame_path"]):
-            st.image(result["best_frame_path"])
+            if annotated_path and os.path.exists(annotated_path):
+                st.image(annotated_path)
+            elif result.get("best_frame_path") and os.path.exists(result["best_frame_path"]):
+                st.image(result["best_frame_path"])
 
-        st.markdown("</div></div>", unsafe_allow_html=True)
+            st.markdown("</div></div>", unsafe_allow_html=True)
 
-    # Step grid
-    steps = result.get("steps") or []
-    step_imgs = result.get("step_image_paths") or {}
+        # Step grid
+        steps = result.get("steps") or []
+        step_imgs = result.get("step_image_paths") or {}
 
-    if steps:
-        st.markdown("## Step-by-Step Breakdown")
-        st.caption("Each card zooms into the body part being checked. "
-                   "Gray cards mean the body part wasn't visible.")
+        if steps:
+            st.markdown("## Step-by-Step Breakdown")
+            st.caption("Each card zooms into the body part being checked. "
+                       "Gray cards mean the body part wasn't visible.")
 
-        for i in range(0, len(steps), 3):
-            cols = st.columns(3)
-            for j, col in enumerate(cols):
-                if i + j >= len(steps):
-                    continue
-                s = steps[i + j]
-                step_num = s["step"]
-                not_visible = s.get("not_visible", False)
-                with col:
-                    if not_visible:
-                        st.markdown(f"""
-                        <div class='step-card notvisible'>
-                          <div class='step-header'>
-                            <div class='step-name'>Step {step_num}: {s['name']}</div>
-                            <div class='step-status-icon'>👁️</div>
-                          </div>
-                          <div class='step-score-row'>
-                            <div>
-                              <span class='step-score-big notvisible'>0</span>
-                              <span class='step-score-suffix'>/100</span>
+            for i in range(0, len(steps), 3):
+                cols = st.columns(3)
+                for j, col in enumerate(cols):
+                    if i + j >= len(steps):
+                        continue
+                    s = steps[i + j]
+                    step_num = s["step"]
+                    not_visible = s.get("not_visible", False)
+                    with col:
+                        if not_visible:
+                            st.markdown(f"""
+                            <div class='step-card notvisible'>
+                              <div class='step-header'>
+                                <div class='step-name'>Step {step_num}: {s['name']}</div>
+                                <div class='step-status-icon'>👁️</div>
+                              </div>
+                              <div class='step-score-row'>
+                                <div>
+                                  <span class='step-score-big notvisible'>0</span>
+                                  <span class='step-score-suffix'>/100</span>
+                                </div>
+                                <div class='step-fail-rate'>Not visible</div>
+                              </div>
+                              <div class='step-image-wrap'>
+                            """, unsafe_allow_html=True)
+
+                            img_key = f"step_{step_num}"
+                            img_path = step_imgs.get(img_key)
+                            if img_path and os.path.exists(img_path):
+                                st.image(img_path)
+
+                            st.markdown(f"""
+                              </div>
+                              <div class='step-notvisible-msg'>
+                                <strong>Cannot evaluate:</strong> {s.get('issue') or 'body part not visible in the frame'}
+                              </div>
+                              <div class='step-cue'>
+                                <strong>Cue:</strong> {s['cue']}
+                              </div>
                             </div>
-                            <div class='step-fail-rate'>Not visible</div>
-                          </div>
-                          <div class='step-image-wrap'>
-                        """, unsafe_allow_html=True)
-
-                        img_key = f"step_{step_num}"
-                        img_path = step_imgs.get(img_key)
-                        if img_path and os.path.exists(img_path):
-                            st.image(img_path)
-
-                        st.markdown(f"""
-                          </div>
-                          <div class='step-notvisible-msg'>
-                            <strong>Cannot evaluate:</strong> {s.get('issue') or 'body part not visible in the frame'}
-                          </div>
-                          <div class='step-cue'>
-                            <strong>Cue:</strong> {s['cue']}
-                          </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        passed = s["passed_overall"]
-                        pf_class = "passed" if passed else "failed"
-                        score_class = "pass" if passed else "fail"
-                        icon = "✅" if passed else "⚠️"
-
-                        if mode == "photo":
-                            rate_label = "Pass" if passed else "Needs work"
+                            """, unsafe_allow_html=True)
                         else:
-                            rate_label = f"Failed in {s['fail_rate_percent']}% of frames"
+                            passed = s["passed_overall"]
+                            pf_class = "passed" if passed else "failed"
+                            score_class = "pass" if passed else "fail"
+                            icon = "✅" if passed else "⚠️"
 
-                        st.markdown(f"""
-                        <div class='step-card {pf_class}'>
-                          <div class='step-header'>
-                            <div class='step-name'>Step {step_num}: {s['name']}</div>
-                            <div class='step-status-icon'>{icon}</div>
-                          </div>
-                          <div class='step-score-row'>
-                            <div>
-                              <span class='step-score-big {score_class}'>{s['average_score']}</span>
-                              <span class='step-score-suffix'>/100</span>
-                            </div>
-                            <div class='step-fail-rate'>{rate_label}</div>
-                          </div>
-                          <div class='step-image-wrap'>
-                        """, unsafe_allow_html=True)
+                            if mode == "photo":
+                                rate_label = "Pass" if passed else "Needs work"
+                            else:
+                                rate_label = f"Failed in {s['fail_rate_percent']}% of frames"
 
-                        img_key = f"step_{step_num}"
-                        img_path = step_imgs.get(img_key)
-                        if img_path and os.path.exists(img_path):
-                            st.image(img_path)
+                            st.markdown(f"""
+                            <div class='step-card {pf_class}'>
+                              <div class='step-header'>
+                                <div class='step-name'>Step {step_num}: {s['name']}</div>
+                                <div class='step-status-icon'>{icon}</div>
+                              </div>
+                              <div class='step-score-row'>
+                                <div>
+                                  <span class='step-score-big {score_class}'>{s['average_score']}</span>
+                                  <span class='step-score-suffix'>/100</span>
+                                </div>
+                                <div class='step-fail-rate'>{rate_label}</div>
+                              </div>
+                              <div class='step-image-wrap'>
+                            """, unsafe_allow_html=True)
 
-                        st.markdown("</div>", unsafe_allow_html=True)
+                            img_key = f"step_{step_num}"
+                            img_path = step_imgs.get(img_key)
+                            if img_path and os.path.exists(img_path):
+                                st.image(img_path)
 
-                        if s["issue"]:
+                            st.markdown("</div>", unsafe_allow_html=True)
+
+                            if s["issue"]:
+                                st.markdown(
+                                    f"<div class='step-issue'><strong>Issue:</strong> {s['issue']}</div>",
+                                    unsafe_allow_html=True,
+                                )
+                            else:
+                                st.markdown(
+                                    "<div class='step-passed-msg'><strong>✓</strong> Looks good for this step.</div>",
+                                    unsafe_allow_html=True,
+                                )
                             st.markdown(
-                                f"<div class='step-issue'><strong>Issue:</strong> {s['issue']}</div>",
+                                f"<div class='step-cue'><strong>Cue:</strong> {s['cue']}</div>",
                                 unsafe_allow_html=True,
                             )
-                        else:
-                            st.markdown(
-                                "<div class='step-passed-msg'><strong>✓</strong> Looks good for this step.</div>",
-                                unsafe_allow_html=True,
-                            )
-                        st.markdown(
-                            f"<div class='step-cue'><strong>Cue:</strong> {s['cue']}</div>",
-                            unsafe_allow_html=True,
-                        )
-                        st.markdown("</div>", unsafe_allow_html=True)
+                            st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("## Coach's Feedback")
-    st.caption("Generated based on your step-by-step report.")
-    st.text_area(
-        "Feedback",
-        value=st.session_state.gemini_feedback or "No feedback generated.",
-        height=320,
-        label_visibility="collapsed",
-    )
+        st.markdown("## Coach's Feedback")
+        st.caption("Generated based on your step-by-step report.")
+        st.text_area(
+            "Feedback",
+            value=st.session_state.gemini_feedback or "No feedback generated.",
+            height=320,
+            label_visibility="collapsed",
+        )
 
 elif not st.session_state.video_path:
     st.info("👆 Upload a video or take a photo above, then click **Analyze Pose**.")
