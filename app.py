@@ -8,7 +8,7 @@ from src.feedback import get_gemini_feedback
 
 
 st.set_page_config(
-    page_title="Extended Child's Pose Analysis",
+    page_title="Child's Pose Analysis",
     page_icon="🧘",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -406,8 +406,8 @@ def is_image(path):
 # Header
 st.markdown("""
 <div class='page-header'>
-  <h1>🧘 Extended Child's Pose Analysis</h1>
-  <div class='subtitle'>Utthita Balasana - Upload a video OR take a photo. Get a step-by-step alignment report.</div>
+  <h1>🧘 Child's Pose Analysis</h1>
+  <div class='subtitle'>Upload a video OR take a photo. Get a step-by-step alignment report.</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -535,7 +535,7 @@ if st.session_state.analysis_result:
     # Show "not Child's Pose" prominently if pose was rejected
     if result.get("pose_invalid"):
         st.error(
-            "❌ **This does not look like Extended Child's Pose.** "
+            "❌ **This does not look like Child's Pose.** "
             "You appear to be standing or in a different pose. "
             "Please get into the pose (kneeling, forehead toward the mat, "
             "arms extended forward) and re-record from the SIDE of your body."
