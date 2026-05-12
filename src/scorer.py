@@ -280,19 +280,27 @@ def check_shoulders_relaxed(features, visible=True):
         )
 
     # shoulder_ear_drop: positive = shoulders below ears (relaxed, good)
-    #                    near zero = shoulders level with ears (hunched)
-    #                    negative = shoulders above ears (very tense)
+    #                    near zero = shoulders level with ears (folded forward)
+    #                    negative = shoulders above ears (hunched/tense)
+    # NOTE: In a folded-forward pose, the head tilts forward and the ear is
+    # naturally near shoulder height. So a small drop is NORMAL, not a problem.
+    # Only clearly negative drops (ear well below shoulder = hunched) should fail.
     drop = features["shoulder_ear_drop"]
-    # We want drop to be a reasonable positive value.
-    # Ideal: drop >= 0.10 (shoulders well below ears)
-    if drop >= 0.10:
+
+    # Generous thresholds - in folded poses the natural geometry compresses
+    # the shoulder-ear distance. Floor of 60 so this step can't crater the score.
+    if drop >= 0.04:
         score = 100.0
-    elif drop >= 0:
-        score = round(100.0 * (drop / 0.10) ** 2, 1)
+    elif drop >= -0.04:
+        # Linearly map drop in [-0.04, 0.04] to score in [60, 100]
+        score = round(60.0 + (drop + 0.04) * (40.0 / 0.08), 1)
+    elif drop >= -0.15:
+        # Map drop in [-0.15, -0.04] to score in [0, 60]
+        score = round(max(0.0, 60.0 * (drop + 0.15) / 0.11), 1)
     else:
         score = 0.0
 
-    passed = drop >= 0.05
+    passed = drop >= -0.03
 
     return {
         "step": 6, "name": "Shoulders Relaxed",
@@ -345,20 +353,23 @@ def validate_pose(features, step_visibility=None):
     very_bad = sum(1 for s in step_results if s["score"] < 20)
     critical = sum(1 for s in step_results if s["score"] < 40)
 
+    # Compound penalty - softer than Tadasana since Child's Pose is restorative
+    # (one shoulder issue shouldn't tank an otherwise excellent fold)
     final_score = base_score
     if very_bad >= 2:
-        final_score *= 0.55
+        final_score *= 0.65   # multiple very-bad steps still meaningful penalty
     elif very_bad >= 1:
-        final_score *= 0.75
+        final_score *= 0.90   # one very-bad step gets a small penalty only
     elif critical >= 2:
-        final_score *= 0.85
+        final_score *= 0.92
 
+    # Hard caps - more forgiving than Tadasana version
     if worst < 50:
-        final_score = min(final_score, 78.0)
+        final_score = min(final_score, 85.0)
     if worst < 30:
-        final_score = min(final_score, 60.0)
+        final_score = min(final_score, 72.0)
     if worst < 15:
-        final_score = min(final_score, 45.0)
+        final_score = min(final_score, 60.0)
 
     final_score = int(round(final_score))
     final_score = max(0, min(100, final_score))
